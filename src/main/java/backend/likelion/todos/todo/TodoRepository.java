@@ -1,13 +1,17 @@
 package backend.likelion.todos.todo;
 
+import java.time.Year;
+import java.util.Date;
 import java.util.List;
 import org.antlr.v4.runtime.atn.SemanticContext.AND;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface TodoRepository {
+public interface TodoRepository extends JpaRepository<Todo, Long> {
     // TODO [10단계] JpaRepository를 상속받습니다.
 
     /**
@@ -25,5 +29,15 @@ public interface TodoRepository {
      *      AND Todo의 date의 MONTH 부분이 주어진 인자의 month와 동일 (hint: MONTH(date) 시 date의 년도 부분이 나온다.)
      * - 정렬 Todo의 date의 DAY 부분을 오름차순으로. (hint: DAY(date) 시 date의 년도 부분이 나온다.)
      */
-    List<Todo> findAllByMemberIdAndDateOrderByDayAsc(Long memberId, int year, int month);
+    @Query("""
+            SELECT t 
+            FROM Todo t 
+            JOIN t.goal g 
+            ON t.goal = g 
+            WHERE g.member.id = :memberId 
+            AND YEAR(t.date) = :year 
+            AND MONTH(t.date) = :month 
+            ORDER BY DAY(t.date) ASC
+            """)
+    List<Todo> findAllByMemberIdAndDateOrderByDayAsc(@Param("memberId") Long memberId, @Param("year") int year, @Param("month") int month);
 }
